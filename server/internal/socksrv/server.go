@@ -97,6 +97,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 			err = s.hub.Publish(ctx, string(message))
 			if err != nil {
 				slog.ErrorContext(ctx, "error on s.hub.Publish")
+				return
 			}
 		}
 	}()
