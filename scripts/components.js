@@ -1,89 +1,107 @@
 (() => {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const users = new Map();
-    const scene = document.querySelector("a-scene");
-    console.log(scene);
+  const sock = new WebSocket(`ws://${window.location.host}/socketserver`);
 
-    function getRandomColor() {
-      var letters = "0123456789ABCDEF";
-      var color = "#";
-      for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
+  sock.onmessage = (event) => {
+    console.log(event);
+  };
+
+  sock.onerror = (event) => {
+    console.log(event);
+  };
+
+  let i = 0;
+  setInterval(() => {
+    i++;
+    if (sock.readyState === WebSocket.OPEN) {
+      sock.send(`hello ${i}`);
     }
+  }, 1000);
 
-    function createUser(name, position) {
-      if (users.has(name)) {
-        return;
-      }
-      const el = document.createElement("a-sphere");
-      el.setAttribute("position", position);
-      el.setAttribute("radius", 1.25);
-      el.setAttribute("color", getRandomColor());
+  // document.addEventListener("DOMContentLoaded", () => {
+  //   const users = new Map();
+  //   const scene = document.querySelector("a-scene");
+  //   console.log(scene);
 
-      el.dataset.name = name;
-      users.set(name, el);
+  //   function getRandomColor() {
+  //     var letters = "0123456789ABCDEF";
+  //     var color = "#";
+  //     for (var i = 0; i < 6; i++) {
+  //       color += letters[Math.floor(Math.random() * 16)];
+  //     }
+  //     return color;
+  //   }
 
-      scene.append(el);
-      console.log(`createUser: ${el}`);
-    }
+  //   function createUser(name, position) {
+  //     if (users.has(name)) {
+  //       return;
+  //     }
+  //     const el = document.createElement("a-sphere");
+  //     el.setAttribute("position", position);
+  //     el.setAttribute("radius", 1.25);
+  //     el.setAttribute("color", getRandomColor());
 
-    function removeUser(name) {
-      const el = users.get(name);
-      if (!el) {
-        return;
-      }
-      el.remove();
-      users.delete(name);
-      console.log(`removeUser: ${name}`);
-    }
+  //     el.dataset.name = name;
+  //     users.set(name, el);
 
-    function moveUser(name, position) {
-      const el = users.get(name);
-      if (!el) {
-        return;
-      }
-      el.setAttribute("position", position);
-      console.log(`moveUser: ${name}, ${position}`);
-    }
+  //     scene.append(el);
+  //     console.log(`createUser: ${el}`);
+  //   }
 
-    function getUserPosition(name) {
-      const el = users.get(name);
-      return el?.object3D?.position;
-    }
+  //   function removeUser(name) {
+  //     const el = users.get(name);
+  //     if (!el) {
+  //       return;
+  //     }
+  //     el.remove();
+  //     users.delete(name);
+  //     console.log(`removeUser: ${name}`);
+  //   }
 
-    createUser(0, { x: 1, y: 0, z: 1 });
-    setInterval(() => {
-      const r = Math.random();
-      if (r < 0.01) {
-        const newPosition = {
-          x: 2 - 4 * Math.random(),
-          y: 0,
-          z: 2 - 4 * Math.random(),
-        };
-        createUser(Math.random(), newPosition);
-      } else if (0.01 <= r && r < 0.02) {
-        const keys = users.keys().toArray();
-        const key = keys[Math.ceil(keys.length * Math.random())];
-        if (key) {
-          removeUser(key);
-        }
-      } else {
-        const keys = users.keys().toArray();
-        const key = keys[Math.ceil(keys.length * Math.random())];
-        if (key) {
-          const position = getUserPosition(key);
-          const newPosition = {
-            x: position.x + (0.5 - Math.random()),
-            y: position.y,
-            z: position.z + (0.5 - Math.random()),
-          };
-          moveUser(key, newPosition);
-        }
-      }
-    }, 10);
-  });
+  //   function moveUser(name, position) {
+  //     const el = users.get(name);
+  //     if (!el) {
+  //       return;
+  //     }
+  //     el.setAttribute("position", position);
+  //     console.log(`moveUser: ${name}, ${position}`);
+  //   }
+
+  //   function getUserPosition(name) {
+  //     const el = users.get(name);
+  //     return el?.object3D?.position;
+  //   }
+
+  //   createUser(0, { x: 1, y: 0, z: 1 });
+  //   setInterval(() => {
+  //     const r = Math.random();
+  //     if (r < 0.01) {
+  //       const newPosition = {
+  //         x: 2 - 4 * Math.random(),
+  //         y: 0,
+  //         z: 2 - 4 * Math.random(),
+  //       };
+  //       createUser(Math.random(), newPosition);
+  //     } else if (0.01 <= r && r < 0.02) {
+  //       const keys = users.keys().toArray();
+  //       const key = keys[Math.ceil(keys.length * Math.random())];
+  //       if (key) {
+  //         removeUser(key);
+  //       }
+  //     } else {
+  //       const keys = users.keys().toArray();
+  //       const key = keys[Math.ceil(keys.length * Math.random())];
+  //       if (key) {
+  //         const position = getUserPosition(key);
+  //         const newPosition = {
+  //           x: position.x + (0.5 - Math.random()),
+  //           y: position.y,
+  //           z: position.z + (0.5 - Math.random()),
+  //         };
+  //         moveUser(key, newPosition);
+  //       }
+  //     }
+  //   }, 10);
+  // });
 })();
