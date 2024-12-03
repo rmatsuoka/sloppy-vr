@@ -1,18 +1,20 @@
 package socksrv
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/rmatsuoka/sloppy-vr/server/internal/hub"
 )
 
 type Server struct {
 	upgrader *websocket.Upgrader
+	hub      *hub.Hub
 }
 
-func NewServer() *Server {
+func NewServer(hub *hub.Hub) *Server {
 	upgrader := &websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -22,6 +24,7 @@ func NewServer() *Server {
 	}
 	return &Server{
 		upgrader: upgrader,
+		hub:      hub,
 	}
 }
 
@@ -40,20 +43,29 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer conn.Close()
 
 	ch := make(chan struct{})
-	canceled := make(chan struct{})
+	ctx, cancel := context.WithCancel(req.Context())
+	defer cancel()
+
+	subscriber, err := s.hub.Subscribe(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to subscribe", "error", err)
+		conn.Close()
+		return
+	}
+	defer subscriber.Close()
 
 	go func() {
 		defer func() { ch <- struct{}{} }()
-		ticker := time.NewTicker(time.Second)
 		for {
 			select {
-			case <-canceled:
-				slog.Info("writer is canceled")
+			case <-ctx.Done():
 				return
-			case <-ticker.C:
-				err := conn.WriteMessage(websocket.TextMessage, []byte("hello"))
+			case mesg := <-subscriber.Channel():
+				slog.Info("subscribe mesg", "message", mesg)
+				err := conn.WriteMessage(websocket.TextMessage, []byte(mesg))
 				if err != nil {
 					slog.Error("error on conn.WriteMessage",
 						"remoteAddr", conn.RemoteAddr(),
@@ -69,8 +81,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 		defer func() { ch <- struct{}{} }()
 		for {
 			select {
-			case <-canceled:
-				slog.Info("reader is canceled")
+			case <-ctx.Done():
 				return
 			default:
 			}
@@ -82,18 +93,17 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 				)
 				return
 			}
-			slog.Info("conn.ReadMessage",
-				"message", message,
-				"remoteAddr", conn.RemoteAddr(),
-			)
+			slog.Info("websock message", "message", message)
+			err = s.hub.Publish(ctx, string(message))
+			if err != nil {
+				slog.ErrorContext(ctx, "error on s.hub.Publish")
+			}
 		}
 	}()
 
 	// reader or writer is finished.
 	<-ch
-	close(canceled)
+	cancel()
 
 	<-ch // wait for canceling writer or reader.
-	conn.Close()
-	slog.Info("conn.Close()")
 }

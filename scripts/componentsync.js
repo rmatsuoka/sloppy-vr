@@ -1,52 +1,53 @@
-export function startComponentSync(/* sock */) {
-  // sock.onmessage = (event) => {
-  //   const msg = JSON.parse(event.data);
-  //   updateOrCreateUser(msg);
-  // };
-  const users = new Map();
-  setInterval(() => {
-    const r = Math.random();
-
-    const randomKey = () => {
-      if (users.size === 0) {
-        return undefined;
-      }
-      const keys = users.keys().toArray();
-      return keys[Math.floor(keys.length * Math.random())];
-    };
-
-    if (r < 0.1) {
-      users.set(Math.random(), {
-        x: 2 - 4 * Math.random(),
-        y: 0,
-        z: 2 - 4 * Math.random(),
-      });
-    } else if (r < 0.2) {
-      const key = randomKey();
-      if (users.delete(key)) {
-        console.log(`delete ${key}`);
-      }
-    } else {
-      for (const [key, user] of users) {
-        if (key !== undefined) {
-          const user = users.get(key);
-          users.set(key, {
-            x: user.x + (0.5 - Math.random()),
-            y: user.y,
-            z: user.z + (0.5 - Math.random()),
-          });
-        }
-      }
+export function startComponentSync(sock, myClientId) {
+  sock.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    console.log(msg);
+    if (msg.clientId === myClientId) {
+      return;
     }
-
-    for (let [key, user] of users) {
-      updateOrCreateUser({
-        clientId: key,
-        name: key,
-        position: user,
-      });
-    }
-  }, 100);
+    updateOrCreateUser(msg);
+  };
+  // const users = new Map();
+  // setInterval(() => {
+  //   const r = Math.random();
+  //   const randomKey = () => {
+  //     if (users.size === 0) {
+  //       return undefined;
+  //     }
+  //     const keys = users.keys().toArray();
+  //     return keys[Math.floor(keys.length * Math.random())];
+  //   };
+  //   if (r < 0.1) {
+  //     users.set(Math.random(), {
+  //       x: 2 - 4 * Math.random(),
+  //       y: 0,
+  //       z: 2 - 4 * Math.random(),
+  //     });
+  //   } else if (r < 0.2) {
+  //     const key = randomKey();
+  //     if (users.delete(key)) {
+  //       console.log(`delete ${key}`);
+  //     }
+  //   } else {
+  //     for (const [key, user] of users) {
+  //       if (key !== undefined) {
+  //         const user = users.get(key);
+  //         users.set(key, {
+  //           x: user.x + (0.5 - Math.random()),
+  //           y: user.y,
+  //           z: user.z + (0.5 - Math.random()),
+  //         });
+  //       }
+  //     }
+  //   }
+  //   for (let [key, user] of users) {
+  //     updateOrCreateUser({
+  //       clientId: key,
+  //       name: key,
+  //       position: user,
+  //     });
+  //   }
+  // }, 100);
 }
 
 function createUserElement({ clientId, name, position }) {

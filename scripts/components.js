@@ -1,6 +1,6 @@
 import * as socktype from "./socktype";
 
-export function aframeRegisterComponent(/* sock, */ clientId) {
+export function aframeRegisterComponent(sock, clientId) {
   console.log("aframe");
   AFRAME.registerComponent("send-position", {
     init: function () {
@@ -8,14 +8,15 @@ export function aframeRegisterComponent(/* sock, */ clientId) {
     },
 
     tick: function () {
-      if (Date.now() - this.timestamp > 1000) {
+      if (Date.now() - this.timestamp > 10) {
         this.timestamp = Date.now();
         const buf = JSON.stringify({
           type: socktype.Position,
           clientId: clientId,
+          name: "",
           position: this.el.object3D.position,
         });
-        // sock.send(buf);
+        sock.send(buf);
         console.log(buf);
       }
     },

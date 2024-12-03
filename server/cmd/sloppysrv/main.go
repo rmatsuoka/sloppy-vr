@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/redis/go-redis/v9"
+	"github.com/rmatsuoka/sloppy-vr/server/internal/hub"
 	"github.com/rmatsuoka/sloppy-vr/server/internal/socksrv"
 )
 
@@ -19,7 +21,16 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	srv := socksrv.NewServer()
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	srv := socksrv.NewServer(&hub.Hub{
+		Client:      client,
+		ChannelName: "user.position",
+	})
 	srv.Install(mux.Handle)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

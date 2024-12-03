@@ -3,14 +3,14 @@ import { getClientId } from "./clientid.js";
 import { startComponentSync } from "./componentsync.js";
 
 const clientId = getClientId();
-// const sock = new WebSocket(`ws://${window.location.host}/socketserver`);
-//
-// sock.onerror = (event) => {
-//   console.log(event);
-// };
+const sock = new WebSocket(`ws://${window.location.host}/socketserver`);
 
-aframeRegisterComponent(/* sock, */ clientId);
+sock.onerror = (event) => {
+  console.log(event);
+};
+
+aframeRegisterComponent(sock, clientId);
 
 document.addEventListener("DOMContentLoaded", () => {
-  startComponentSync(/* sock */);
+  startComponentSync(sock, clientId);
 });
