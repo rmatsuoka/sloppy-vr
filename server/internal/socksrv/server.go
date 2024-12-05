@@ -4,9 +4,20 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/rmatsuoka/sloppy-vr/server/internal/hub"
+)
+
+const (
+	writeWait = 10 * time.Second
+
+	pongWait = 60 * time.Second
+
+	pingPeriod = (pongWait * 9) / 10
+
+	maxMessageSize = 1024
 )
 
 type Server struct {
@@ -44,7 +55,6 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer conn.Close()
-
 	ch := make(chan struct{})
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
@@ -58,13 +68,18 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 	defer subscriber.Close()
 
 	go func() {
-		defer func() { ch <- struct{}{} }()
+		ticker := time.NewTicker(pingPeriod)
+		defer func() {
+			ticker.Stop()
+			ch <- struct{}{}
+		}()
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case mesg := <-subscriber.Channel():
-				// slog.Info("subscribe mesg", "message", mesg)
+				conn.SetWriteDeadline(time.Now().Add(writeWait))
+				slog.Info("subscribe mesg", "message", mesg)
 				err := conn.WriteMessage(websocket.TextMessage, []byte(mesg))
 				if err != nil {
 					slog.Error("error on conn.WriteMessage",
@@ -73,12 +88,21 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 					)
 					return
 				}
+			case <-ticker.C:
+				conn.SetWriteDeadline(time.Now().Add(writeWait))
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					slog.ErrorContext(ctx, "writeMessage ping", "error", err)
+					return
+				}
 			}
 		}
 	}()
 
 	go func() {
 		defer func() { ch <- struct{}{} }()
+		conn.SetReadLimit(maxMessageSize)
+		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 		for {
 			select {
 			case <-ctx.Done():
@@ -96,7 +120,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 			// slog.Info("websock message", "message", message)
 			err = s.hub.Publish(ctx, string(message))
 			if err != nil {
-				slog.ErrorContext(ctx, "error on s.hub.Publish")
+				slog.ErrorContext(ctx, "error on s.hub.Publish", "error", err)
 				return
 			}
 		}

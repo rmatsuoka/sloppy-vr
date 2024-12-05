@@ -1,4 +1,5 @@
 export function startComponentSync(sock, myClientId) {
+  console.log("startCompoenentSync");
   sock.onmessage = (event) => {
     const msg = JSON.parse(event.data);
     console.log(msg);

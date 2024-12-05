@@ -11,6 +11,4 @@ sock.onerror = (event) => {
 
 aframeRegisterComponent(sock, clientId);
 
-document.addEventListener("DOMContentLoaded", () => {
-  startComponentSync(sock, clientId);
-});
+startComponentSync(sock, clientId);

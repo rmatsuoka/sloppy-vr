@@ -67,9 +67,11 @@ func main() {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFileFS(w, r, sloppyvr.FS, "index.html")
 	})
-	mux.HandleFunc("GET /vr", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("GET /vr", hatenaauth.AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFileFS(w, r, sloppyvr.FS, "vr.html")
-	})
+	}), func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}))
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		slog.Info("request",
