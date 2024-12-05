@@ -3,7 +3,7 @@ import { getClientId } from "./clientid.js";
 import { startComponentSync } from "./componentsync.js";
 
 const clientId = getClientId();
-const sock = new WebSocket(`ws://${window.location.host}/socketserver`);
+const sock = new WebSocket(`wss://${window.location.host}/socketserver`);
 
 sock.onerror = (event) => {
   console.log(event);
