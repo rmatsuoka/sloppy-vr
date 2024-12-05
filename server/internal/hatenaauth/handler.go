@@ -56,8 +56,8 @@ func (a *Auth) Install(handle func(string, http.Handler)) {
 		handle(pattern, h)
 	}
 
-	handleFunc("/signin", a.signin)
-	handleFunc("/callback", a.callback)
+	handleFunc("GET /signin", a.signin)
+	handleFunc("GET /callback", a.callback)
 }
 
 func (a *Auth) signin(w http.ResponseWriter, req *http.Request) {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/redis/go-redis/v9"
+	sloppyvr "github.com/rmatsuoka/sloppy-vr"
 	"github.com/rmatsuoka/sloppy-vr/server/internal/api"
 	"github.com/rmatsuoka/sloppy-vr/server/internal/hatenaauth"
 	"github.com/rmatsuoka/sloppy-vr/server/internal/hub"
@@ -46,6 +47,15 @@ func main() {
 		mux.Handle(pattern, hatenaauth.AuthHandler(h, func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "not found", http.StatusNotFound)
 		}))
+	})
+
+	mux.Handle("GET /styles/", http.FileServerFS(sloppyvr.FS))
+	mux.Handle("GET /scripts/", http.FileServerFS(sloppyvr.FS))
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFileFS(w, r, sloppyvr.FS, "index.html")
+	})
+	mux.HandleFunc("GET /vr", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFileFS(w, r, sloppyvr.FS, "vr.html")
 	})
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

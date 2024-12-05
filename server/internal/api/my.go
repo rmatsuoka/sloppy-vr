@@ -8,7 +8,7 @@ import (
 )
 
 func Install(handle func(string, http.Handler)) {
-	handle("/my", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	handle("GET /my", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		user, ok := hatenaauth.MyFromContext(req.Context())
 		if !ok {
 			return
