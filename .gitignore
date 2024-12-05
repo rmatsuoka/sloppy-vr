@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+sloppysrv
+*.tar.gz

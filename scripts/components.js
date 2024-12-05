@@ -1,4 +1,4 @@
-import * as socktype from "./socktype";
+import * as socktype from "./socktype.js";
 
 export function aframeRegisterComponent(sock, clientId) {
   console.log("aframe");
@@ -8,7 +8,7 @@ export function aframeRegisterComponent(sock, clientId) {
     },
 
     tick: function () {
-      if (Date.now() - this.timestamp > 10) {
+      if (Date.now() - this.timestamp > 17) {
         this.timestamp = Date.now();
         const buf = JSON.stringify({
           type: socktype.Position,
@@ -17,7 +17,7 @@ export function aframeRegisterComponent(sock, clientId) {
           position: this.el.object3D.position,
         });
         sock.send(buf);
-        console.log(buf);
+        // console.log(buf);
       }
     },
   });
@@ -26,7 +26,7 @@ export function aframeRegisterComponent(sock, clientId) {
     tick: function () {
       if (inactiveUserElement(this.el)) {
         this.el.remove();
-        console.log(`this.el.remove: ${this.el.dataset.clientId}`);
+        // console.log(`this.el.remove: ${this.el.dataset.clientId}`);
       }
     },
   });
