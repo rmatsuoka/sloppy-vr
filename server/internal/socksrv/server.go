@@ -64,7 +64,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 			case <-ctx.Done():
 				return
 			case mesg := <-subscriber.Channel():
-				slog.Info("subscribe mesg", "message", mesg)
+				// slog.Info("subscribe mesg", "message", mesg)
 				err := conn.WriteMessage(websocket.TextMessage, []byte(mesg))
 				if err != nil {
 					slog.Error("error on conn.WriteMessage",
@@ -93,7 +93,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 				)
 				return
 			}
-			slog.Info("websock message", "message", message)
+			// slog.Info("websock message", "message", message)
 			err = s.hub.Publish(ctx, string(message))
 			if err != nil {
 				slog.ErrorContext(ctx, "error on s.hub.Publish")
@@ -102,7 +102,7 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	// reader or writer is finished.
+	// reader or writer has finished.
 	<-ch
 	cancel()
 

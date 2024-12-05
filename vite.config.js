@@ -14,6 +14,12 @@ export default {
 
   server: {
     proxy: {
+      "/signin": {
+        target: "http://localhost:8001",
+      },
+      "/callback": {
+        target: "http://localhost:8001",
+      },
       "/socketserver": {
         target: "ws://localhost:8001",
         ws: true,
