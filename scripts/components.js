@@ -1,7 +1,6 @@
 import * as socktype from "./socktype.js";
 
 export function aframeRegisterComponent(sock, clientId) {
-  console.log("aframe");
   AFRAME.registerComponent("send-position", {
     init: function () {
       this.timestamp = Date.now();
@@ -16,8 +15,9 @@ export function aframeRegisterComponent(sock, clientId) {
           name: "",
           position: this.el.object3D.position,
         });
-        sock.send(buf);
-        // console.log(buf);
+        if (sock.readyState === 1) {
+          sock.send(buf);
+        }
       }
     },
   });
