@@ -15,12 +15,25 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "127.0.0.1:8001", "addr")
+	addr     = flag.String("addr", "127.0.0.1:8001", "addr")
+	certFile = flag.String("cert", "", "TLS certFile")
+	keyFile  = flag.String("key", "", "TLS keyFile")
 )
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.Parse()
+
+	enableTLS := *certFile != "" || *keyFile != ""
+
+	if enableTLS {
+		if *certFile == "" {
+			log.Fatal("no certFile")
+		}
+		if *keyFile == "" {
+			log.Fatal("no keyFile")
+		}
+	}
 
 	mux := http.NewServeMux()
 
@@ -66,7 +79,13 @@ func main() {
 		mux.ServeHTTP(w, req)
 	})
 
-	if err := http.ListenAndServe(*addr, handler); err != nil {
+	var err error
+	if enableTLS {
+		err = http.ListenAndServeTLS(*addr, *certFile, *keyFile, handler)
+	} else {
+		err = http.ListenAndServe(*addr, handler)
+	}
+	if err != nil {
 		log.Fatal(err)
 	}
 }
