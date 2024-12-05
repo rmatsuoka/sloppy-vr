@@ -182,8 +182,13 @@ func getHatenaMy(ctx context.Context, client *http.Client) (HatenaMy, error) {
 
 type ctxkey int
 
-// UserKey is a key of username contained in context. Its associated value type is string.
-var UserKey = ctxkey(0)
+// userKey is a key of username contained in context. Its associated value type is string.
+var userKey = ctxkey(0)
+
+func MyFromContext(ctx context.Context) (HatenaMy, bool) {
+	my, ok := ctx.Value(userKey).(HatenaMy)
+	return my, ok
+}
 
 func AuthHandler(handler http.Handler, fallback func(w http.ResponseWriter, req *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -193,13 +198,17 @@ func AuthHandler(handler http.Handler, fallback func(w http.ResponseWriter, req 
 			return
 		}
 
-		name, ok := session.Values["display_name"]
+		my := HatenaMy{}
+		URLName, ok := session.Values["url_name"]
 		if !ok {
 			fallback(w, req)
 			return
 		}
+		my.URLName = URLName.(string)
+		my.DisplayName = session.Values["display_name"].(string)
+		my.ProfileImageURL = session.Values["profile_image_url"].(string)
 
-		ctx := context.WithValue(req.Context(), UserKey, name)
+		ctx := context.WithValue(req.Context(), userKey, my)
 		req = req.WithContext(ctx)
 
 		if err := session.Save(req, w); err != nil {

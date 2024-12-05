@@ -17,6 +17,9 @@ export default {
       "/signin": {
         target: "http://localhost:8001",
       },
+      "/my": {
+        target: "http://localhost:8001",
+      },
       "/callback": {
         target: "http://localhost:8001",
       },
