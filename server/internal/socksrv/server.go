@@ -79,7 +79,6 @@ func (s *Server) PubSub(w http.ResponseWriter, req *http.Request) {
 				return
 			case mesg := <-subscriber.Channel():
 				conn.SetWriteDeadline(time.Now().Add(writeWait))
-				slog.Info("subscribe mesg", "message", mesg)
 				err := conn.WriteMessage(websocket.TextMessage, []byte(mesg))
 				if err != nil {
 					slog.Error("error on conn.WriteMessage",

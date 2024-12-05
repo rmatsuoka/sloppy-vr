@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -127,7 +126,6 @@ func (a *Auth) callback(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	println(accessToken, accessSecret)
 
 	client := a.config.Client(req.Context(), oauth1.NewToken(accessToken, accessSecret))
 
@@ -170,7 +168,6 @@ func getHatenaMy(ctx context.Context, client *http.Client) (HatenaMy, error) {
 	if err != nil {
 		return HatenaMy{}, fmt.Errorf("auth.getHatenaMy: %w", err)
 	}
-	log.Printf("%s\n", buf)
 	var my HatenaMy
 	err = json.Unmarshal(buf, &my)
 	if err != nil {
